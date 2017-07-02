@@ -16,7 +16,7 @@ variable	ylo equal 0
 variable	yhi equal 50
 
 variable	zlo equal 0
-variable	zhi equal 100
+variable	zhi equal 90
 
 variable	xc equal 25
 variable	yc equal 25
@@ -125,7 +125,7 @@ fix		hopper3 all wall/gran/region hertz/history &
 
 fix		ins all pour ${N_particles} 1 1 region insreg
 
-dump 		m1 all movie 1000 movie-sand-timmer.avi type type size 640 480
+dump 		m1 all movie 20000 movie-sand-timmer.avi type type size 640 480
 
 thermo_style	custom step cpu atoms ke
 thermo_modify	flush yes lost warn
@@ -134,4 +134,4 @@ thermo_modify	flush yes lost warn
 
 run		20000
 unfix 		ins
-run		2000000
+run		1500000
