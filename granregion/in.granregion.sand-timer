@@ -3,7 +3,6 @@ variable	name string funnel_pour
 thermo_modify	flush yes
 units 		si
 variable	PI equal 3.141592653589
-variable	seed equal 14314
 
 ###############################################
 # Geometry-related parameters
@@ -31,8 +30,6 @@ variable rad_cone_big equal 10
 ################################################
 # Particle sizes
 ################################################
-
-variable N_particles equal 200000
 
 variable	rlo equal 0.25
 variable	rhi equal 0.5
@@ -74,10 +71,9 @@ variable	dt equal ${tcol}*0.05
 timestep	${dt}
 
 ###############################################
-variable	dumpfreq equal 1000
-variable	logfreq equal 1000
+variable	logfreq equal 5000
 
-newton 		off
+newton 		on
 atom_style	sphere
 
 boundary	p p f
@@ -123,9 +119,9 @@ fix		1 all nve/sphere
 fix		hopper3 all wall/gran/region hertz/history &
                 ${kn} ${kt} ${gamma_n} ${gamma_t} ${coeffFric} 1 region hopreg
 
-fix		ins all pour ${N_particles} 1 1 region insreg
+fix		ins all pour 200000 1 1 region insreg
 
-dump 		m1 all movie 20000 movie-sand-timmer.avi type type size 640 480
+dump 		m1 all movie 1000 movie-sand-timmer.avi type type size 640 480
 
 thermo_style	custom step cpu atoms ke
 thermo_modify	flush yes lost warn
@@ -134,4 +130,4 @@ thermo_modify	flush yes lost warn
 
 run		20000
 unfix 		ins
-run		1500000
+run		1050000
