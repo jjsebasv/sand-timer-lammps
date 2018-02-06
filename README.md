@@ -15,6 +15,6 @@
 
 ## Run
 
- * From `granregion` run `lampps < in.granregion.TYPE`
+ * From `granregion` run `lammps < in.granregion.TYPE`
    * Where `TYPE = 'box' | 'funnel' | 'mixer' | 'sand-timer'`
  * This will run the script on the `in` file an generate a `movie-TYPE.avi` file
