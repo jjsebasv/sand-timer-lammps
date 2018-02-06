@@ -1,4 +1,4 @@
-# sand-timer-lamps
+# sand-timer-lammps
 
 ## Installation
 
@@ -18,3 +18,8 @@
  * From `granregion` run `lammps < in.granregion.TYPE`
    * Where `TYPE = 'box' | 'funnel' | 'mixer' | 'sand-timer'`
  * This will run the script on the `in` file an generate a `movie-TYPE.avi` file
+
+## Generate .xyz
+
+ * Running the lammps program for the <strong>sand-timer</strong> will generate an .xyz file with trash information on it, to clean it, run the following script
+   * From the granregion folder execute `./generate-xyz.sh NUMBER_OF_PARTICLES_USED`  
