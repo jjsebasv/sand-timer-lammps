@@ -24,12 +24,15 @@ variable z_bottom equal 0
 variable z_middle equal 25
 variable z_top equal 50
 
-variable rad_cone_small equal 1
+variable rad_cone_small equal 2
 variable rad_cone_big equal 10
 
 ################################################
 # Particle sizes
 ################################################
+
+variable amount_of_particles equal 1400
+variable creation_seed equal 64259
 
 variable	rlo equal 0.25
 variable	rhi equal 0.5
@@ -114,12 +117,13 @@ fix		1 all nve/sphere
 fix		hopper3 all wall/gran/region hertz/history &
                 ${kn} ${kt} ${gamma_n} ${gamma_t} ${coeffFric} 1 region top_cone
 
-fix		ins all pour 1000000 1 1 region insreg
+
+fix		ins all pour ${amount_of_particles} 1 ${creation_seed} region insreg
 
 dump 		m1 all movie 500 movie-sand-timmer.avi type type size 640 480
 
 log log.thermo
-thermo_style	custom step dt atoms press
+thermo_style	custom time atoms
 thermo_modify	flush yes lost warn
 
 #variable	atoms_count equal "count(all,top_cone)"
@@ -129,4 +133,4 @@ thermo_modify	flush yes lost warn
 
 run		20000
 unfix 		ins
-run		400000
+run		900000
