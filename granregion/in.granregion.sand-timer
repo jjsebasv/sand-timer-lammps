@@ -1,139 +1,153 @@
-variable	name string funnel_pour
+variable			name string funnel_pour
 
 thermo_modify	flush yes
-units 		cgs
-variable	PI equal 3.141592653589
+
+# This command sets the units [see http://lammps.sandia.gov/doc/units.html#description]
+units 				cgs
+variable			PI equal 3.141592653589
 
 ###############################################
 # Geometry-related parameters
 ###############################################
 
-variable	xlo equal 0
-variable	xhi equal 50
+variable			xlo equal 0
+variable			xhi equal 50
 
-variable	ylo equal 0
-variable	yhi equal 50
+variable			ylo equal 0
+variable			yhi equal 50
 
-variable	zlo equal 0
-variable	zhi equal 90
+variable			zlo equal 0
+variable			zhi equal 90
 
-variable	xc equal 25
-variable	yc equal 25
+variable			xc equal 25
+variable			yc equal 25
 
-variable z_bottom equal 0
-variable z_middle equal 25
-variable z_top equal 50
+variable 			z_bottom equal 0
+variable 			z_middle equal 25
+variable 			z_top equal 50
 
-variable rad_cone_small equal 1.5
-variable rad_cone_big equal 10
+variable 			rad_cone_small equal 1.5
+variable 			rad_cone_big equal 10
 
 ################################################
 # Particle sizes
 ################################################
 
-variable amount_of_particles equal 700
-variable creation_seed equal 91184
+variable 			amount_of_particles equal 700
+variable 			creation_seed equal 829
 
-variable	rlo equal 0.25
-variable	rhi equal 0.5
-variable	dlo equal 2.0*${rlo}
-variable	dhi equal 2.0*${rhi}
+variable			particle_radius equal 0.5
+variable			particle_diameter equal 1
 
-variable 	skin equal ${rhi}
+# skin: extra distance beyond force cutoff (distance units)
+variable 			skin equal 0.5
 
 ###############################################
 # Granular contact parameters
 ###############################################
 
-variable	coeffRes equal 0.1
-variable	coeffFric equal 0.5
+variable			coeffRes equal 0.1
+variable			coeffFric equal 0.5
 
-variable	density equal 2.65
-variable	EYoung equal 10^5
-variable 	Poisson equal 2.0/7.0
-variable	GShear equal ${EYoung}/(2*(1+${Poisson}))
+variable			EYoung equal 10^5
+variable 			Poisson equal 2.0/7.0
+variable			GShear equal ${EYoung}/(2*(1+${Poisson}))
 
-variable	gravity equal 9.8
+variable			gravity equal 9.8
 
-variable	reff equal 0.5*(${rhi}+${rlo})
-variable	meff equal ${density}*4.0/3.0*${PI}*${reff}^3
-variable	min_mass equal ${density}*4.0/3.0*${PI}*${rlo}*${rlo}*${rlo}
-variable	max_mass equal ${density}*4.0/3.0*${PI}*${rhi}*${rhi}*${rhi}
+variable			mass equal 0.0006
 
 ## Typical way to set kn, kt, etc.:
-variable        kn equal 4.0*${GShear}/(3*(1-${Poisson}))
-variable        kt equal 4.0*${GShear}/(2-${Poisson})
+variable 			kn equal 4.0*${GShear}/(3*(1-${Poisson}))
+variable 			kt equal 4.0*${GShear}/(2-${Poisson})
 
-variable	a equal (-2.0*log(${coeffRes})/${PI})^2
-variable        gamma_n equal sqrt($a*2*${kn}/${min_mass}/(1+0.25*$a))
-variable        gamma_t equal ${gamma_n}*0.5
+variable			a equal (-2.0*log(${coeffRes})/${PI})^2
+variable  		gamma_n equal sqrt($a*2*${kn}/${mass}/(1+0.25*$a))
+variable  		gamma_t equal ${gamma_n}*0.5
 
-variable	tcol equal ${PI}/sqrt(2*${kn}/${min_mass}-${gamma_n}/4.0)
-
-variable	dt equal ${tcol}*0.05
-timestep	${dt}
+variable			dt equal ${PI}/sqrt(2*${kn}/${mass}-${gamma_n}/4.0)
+timestep			${dt}
 
 ###############################################
-variable	logfreq equal 50
+variable			logfreq equal 1000
 
-newton 		on
-atom_style	sphere
+newton 				on
+atom_style		sphere
 
-boundary	p p f
+boundary			p p f
 
-region		boxreg block ${xlo} ${xhi} ${ylo} ${yhi} ${zlo} ${zhi}
-create_box	1 boxreg
+# This command sets the whole block
+# xlo, ylo, zlo = 0; xhi, yhi = 50; zhi = 90
+region				boxreg block ${xlo} ${xhi} ${ylo} ${yhi} ${zlo} ${zhi}
+create_box		1 boxreg
 
-pair_style	gran/hertz/history &
-		${kn} ${kt} ${gamma_n} ${gamma_t} ${coeffFric} 1
-pair_coeff	* *
+pair_style		gran/hertz/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${coeffFric} 1
+pair_coeff		* *
 
-neighbor        ${skin} bin
-thermo 		${logfreq}
+# This command sets parameters that affect the building of pairwise neighbor lists
+neighbor  		${skin} bin
+thermo 				${logfreq}
 
-comm_style	brick
+comm_style		brick
 comm_modify 	mode multi group all vel yes
-balance		1.1 shift xyz 20 1.1
-fix		bal all balance 10000 1.1 shift xyz 20 1.01
+balance				1.1 shift xyz 20 1.1
+fix						bal all balance 10000 1.1 shift xyz 20 1.01
 
 ####################### Options specific to pouring #########################
 
 # insertion region for fix/pour
 
-region	     	insreg cylinder z ${xc} ${yc} 9 48 ${zhi} side in units box
+region 				insreg cylinder z ${xc} ${yc} 9 48 ${zhi} side in units box
 
-# define cone and cylinder regions - see lammps doc on region command
-# note new open options
+## Add this to close middle and open once all particles are on
+region 				tap cone z ${xc} ${yc} ${rad_cone_small} ${rad_cone_small} ${z_bottom} ${z_middle} side in units box open 1
 
-region		top_cone cone z ${xc} ${yc} ${rad_cone_small} ${rad_cone_big} &
-		${z_middle} ${z_top} side in units box &
-		open 1 open 2 #Bottom and Top are open
+# define cone regions - see lammps doc on region command [http://lammps.sandia.gov/doc/region.html]
+# xc, yc, z_middle = 25; rad_cone_small = 1.5, 2, 3; rad_cone_big = 10; z_bottom = 0; z_top = 0
 
-region		bottom_cone cone z ${xc} ${yc} ${rad_cone_big} ${rad_cone_small} &
-		${z_bottom} ${z_middle} side in units box &
-		open 2 #Top is open
-
-region		hopreg union 2 top_cone bottom_cone
-
-fix		grav all gravity ${gravity} vector 0 0 -1
-fix		1 all nve/sphere
+## Top cone - Bottom and Top are open
+region				top_cone cone z ${xc} ${yc} ${rad_cone_small} ${rad_cone_big} &
+							${z_middle} ${z_top} side in units box &
+							open 1 open 2
 
 
-fix		hopper3 all wall/gran/region hertz/history &
-                ${kn} ${kt} ${gamma_n} ${gamma_t} ${coeffFric} 1 region hopreg
+## Bottom cone - Top is open
+region				bottom_cone cone z ${xc} ${yc} ${rad_cone_big} ${rad_cone_small} &
+							${z_bottom} ${z_middle} side in units box &
+							open 2
 
-fix		ins all pour ${amount_of_particles} 1 ${creation_seed} region insreg
 
-dump 		m1 all movie 250 movie-sand-timmer.avi type type size 1280 960
+region				hopreg union 2 top_cone bottom_cone
 
-dump 4a all custom 718 sand-timer.xyz radius id x y z vx vy vz
+fix						grav all gravity ${gravity} vector 0 0 -1
+fix						1 all nve/sphere
 
-thermo_style	custom time
+
+fix						hopper3 all wall/gran/region hertz/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${coeffFric} 1 region hopreg
+## Add this to close middle and open once all particles are on
+fix						tap2 all wall/gran/region hertz/history ${kn} ${kt} ${gamma_n} ${gamma_t} ${coeffFric} 1 region tap
+
+# Puts the place from where the atoms are thrown
+fix						ins all pour ${amount_of_particles} 1 ${creation_seed} region insreg diam one ${particle_diameter}
+
+# Saves a video
+dump 					m1 all movie 250 movie-sand-timmer.avi type type size 1280 960
+
+# Saves log from which the xyz will be casted afterwards
+dump 					4a all custom ${logfreq} sand-timer.xyz id radius x y z vx vy vz mass
+
+# This command modifies what goes out on the console log [see http://lammps.sandia.gov/doc/thermo_style.html]
+thermo_style	custom step dt time
+
 thermo_modify	flush yes lost warn
 
 
-# Initial run to fill up the cone
+# Initial run to fill up the cone + number of timesteps [see http://lammps.sandia.gov/doc/run.html]
 
-run		20000
-unfix 		ins
-run		400000
+run						20000
+# Takes away the place from where the atoms are thrown
+unfix 				ins
+
+## Add this to close middle and open once all particles are on
+unfix					tap2
+run						800000

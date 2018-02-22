@@ -3,7 +3,7 @@
 variable	name string funnel_pour
 
 thermo_modify	flush yes
-units 		si  
+units 		si
 variable	PI equal 3.141592653589
 variable	seed equal 14314
 
@@ -31,7 +31,7 @@ variable	radconehi equal 20
 # Particle sizes
 ################################################
 
-variable	rlo equal 0.25 
+variable	rlo equal 0.25
 variable	rhi equal 0.5
 variable	dlo equal 2.0*${rlo}
 variable	dhi equal 2.0*${rhi}
@@ -48,7 +48,7 @@ variable	coeffFric equal 0.5
 variable	density equal 1.0
 variable	EYoung equal 10^5
 variable 	Poisson equal 2.0/7.0
-variable	GShear equal ${EYoung}/(2*(1+${Poisson})) 
+variable	GShear equal ${EYoung}/(2*(1+${Poisson}))
 
 variable	gravity equal 1.0
 
@@ -106,10 +106,10 @@ region	     	insreg cylinder z ${xc} ${yc} 10 30 50 side in units box
 region	    	cylreg cylinder z ${xc} ${yc} ${radconelo} &
 		${zcyllo} ${zconelo} side in units box &
 		open 2 #Top is open
-		
+
 region		conereg cone z ${xc} ${yc} ${radconelo} ${radconehi} &
-		${zconelo} ${zconehi} side in units box & 
-		open 1 open 2 #Bottom and top are open
+		${zconelo} ${zconehi} side in units box &
+		open 2 #Bottom and top are open
 
 region		hopreg union 2 conereg cylreg
 
@@ -120,7 +120,7 @@ fix		1 all nve/sphere
 fix		hopper3 all wall/gran/region hertz/history &
                 ${kn} ${kt} ${gamma_n} ${gamma_t} ${coeffFric} 1 region hopreg
 
-fix		ins all pour 2000 1 42424 region insreg &
+fix		ins all pour 700 1 42424 region insreg &
 		diam range ${dlo} ${dhi} dens ${density} ${density}
 
 #dump		1 all custom ${dumpfreq} ${name}.dump &
@@ -132,13 +132,15 @@ fix		ins all pour 2000 1 42424 region insreg &
 #dump_modify	2 pad 6
 
 dump 		m1 all movie 1000 movie-funnel.avi type type size 640 480
+dump 4a all custom 718 funnel.xyz radius id x y z
 
-thermo_style	custom step cpu atoms ke
+
+thermo_style	custom atoms
 thermo_modify	flush yes lost warn
 
 # Initial run to fill up the cone
 
-run		20000 
+run		20000
 unfix 		ins
 run		150000
 
@@ -148,7 +150,7 @@ region	  	cylreg delete
 region		hopreg delete
 region	    	cylreg cylinder z ${xc} ${yc} ${radconelo} &
 		${zcyllo} ${zconelo} side in units box &
-		open 1 open 2 #Bottom & top are open
+		open 2 #Bottom & top are open
 
 region		hopreg union 2 cylreg conereg
 
